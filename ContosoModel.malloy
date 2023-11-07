@@ -1,0 +1,61 @@
+
+
+source: CurrencyExchange_sr is duckdb.table('../Contoso_1M/ParquetFiles/CurrencyExchange.parquet')
+
+source: Customer_sr is duckdb.table('../Contoso_1M/ParquetFiles/Customer.parquet')
+
+source: Date_sr is duckdb.table('../Contoso_1M/ParquetFiles/Date.parquet')
+    extend {
+                rename:  
+                DayWeek is `Day of Week`
+                DayWeekNumber is `Day of Week Number`
+                DayWeekShort is `Day of Week Short`
+                MonthNumber is `Month Number`
+                MonthShort is `Month Short`
+                WorkingDay is `Working Day`
+                WorkingDayNumber is `Working Day Number`
+                YearMonth is `Year Month`
+                YearMonthNumber is `Year Month Number`
+                YearMonthShort is `Year Month Short`
+                YearQuarter is `Year Quarter`
+                YearQuarterNumber is `Year Quarter Number`
+            }
+source: GeoLocations_sr is duckdb.table('../Contoso_1M/ParquetFiles/GeoLocations.parquet')
+
+source: OrderRows_sr is duckdb.table('../Contoso_1M/ParquetFiles/OrderRows.parquet')
+    extend {
+        rename:  
+        LineNumber is `Line Number`
+        NetPrice is `Net Price`
+        UnitCost is `Unit Cost`
+        UnitPrice is `Unit Price`
+    }
+
+source: Product_sr is duckdb.table('../Contoso_1M/ParquetFiles/Product.parquet')
+    extend {
+            rename:  
+            CategoryCode is `Category Code`
+            ProductCode is `Product Code`
+            ProductName is `Product Name`
+            SubcategoryCode is `Subcategory Code`
+            UnitCost is `Unit Cost`
+            UnitPrice is `Unit Price`
+            WeightUnitMeasure is `Weight Unit Measure`
+        }
+source: Store_sr is duckdb.table('../Contoso_1M/ParquetFiles/Store.parquet')
+    extend {
+                rename:  
+                CloseDate is `Close Date`
+                OpenDate is `Open Date`
+                SquareMeters is `Square Meters`
+                StoreCode is `Store Code`
+    }
+source: Orders_sr is duckdb.table('../Contoso_1M/ParquetFiles/Orders.parquet')
+    extend {
+                rename:  
+                CurrencyCode is `Currency Code`
+                DeliveryDate is `Delivery Date`
+                OrderDate is `Order Date`
+    }
+
+
