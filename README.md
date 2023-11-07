@@ -1,4 +1,4 @@
-Mini project #2  : learning Malloy language using Contoso database (extracted to parquet files).
+Mini project #2  : learning Malloy language using generated Contoso database (extracted to parquet files).
 
 
 Contoso database is available thanks to the team from https://www.sqlbi.com/ and is a modified/enriched version of Microsoft Contoso DB.
@@ -10,8 +10,9 @@ Link to GitHub repo with database generator: https://github.com/sql-bi/Contoso-D
 Downloadable versions: https://github.com/sql-bi/Contoso-Data-Generator/releases/tag/v1.0.0
 
 
-
-I've rebuilt 1M version of this database in SQL Server and then extracted the data into parquet files (gzip) using Pandas and SQLAlchemy.
+I've rebuilt 1M version of this database in SQL Server and then extracted the data into parquet files (gzip) using Pandas and SQLAlchemy. Base parameters were slightly modified:
+start date: 01.01.2016
+end date 31.12.2022
 
 
 My aim is simple - use the language and become proficient in concepts like nesting, metrics, dimensions etc. Also would like to try implement patterns from Malloy docs:
