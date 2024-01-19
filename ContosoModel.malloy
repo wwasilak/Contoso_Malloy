@@ -1,106 +1,21 @@
+import 'ContosoModelBase.malloy'
 
+source: currency_ex is currency_base
 
-source: CurrencyExchange is duckdb.table('../Contoso_1M/ParquetFiles/CurrencyExchange.parquet')
-    extend {
-            rename:
-            ExchangeDate is `Date`
-    }
-
-source: Customer is duckdb.table('../Contoso_1M/ParquetFiles/Customer.parquet')
-
-source: Calendar is duckdb.table('../Contoso_1M/ParquetFiles/Date.parquet')
-    extend {
-            rename: 
-            CalendarDate is `Date` 
-            DayOfWeek is `Day of Week`
-            DayWeekNumber is `Day of Week Number`
-            DayWeekShort is `Day of Week Short`
-            MonthNumber is `Month Number`
-            MonthShort is `Month Short`
-            WorkingDay is `Working Day`
-            WorkingDayNumber is `Working Day Number`
-            YearMonth is `Year Month`
-            YearMonthNumber is `Year Month Number`
-            YearMonthShort is `Year Month Short`
-            YearQuarter is `Year Quarter`
-            YearQuarterNumber is `Year Quarter Number`
-            }
-source: GeoLocations is duckdb.table('../Contoso_1M/ParquetFiles/GeoLocations.parquet')
-
-source: OrderRows is duckdb.table('../Contoso_1M/ParquetFiles/OrderRows.parquet')
-    extend {
-            rename:  
-            LineNumber is `Line Number`
-            NetPrice is `Net Price`
-            UnitCost is `Unit Cost`
-            UnitPrice is `Unit Price`
-    }
-
-source: Product is duckdb.table('../Contoso_1M/ParquetFiles/Product.parquet')
-    extend {
-            rename:  
-            CategoryCode is `Category Code`
-            ProductCode is `Product Code`
-            ProductName is `Product Name`
-            SubcategoryCode is `Subcategory Code`
-            UnitCost is `Unit Cost`
-            UnitPrice is `Unit Price`
-            WeightUnitMeasure is `Weight Unit Measure`
-        }
-source: Store is duckdb.table('../Contoso_1M/ParquetFiles/Store.parquet')
-    extend {
-            rename:  
-            CloseDate is `Close Date`
-            OpenDate is `Open Date`
-            SquareMeters is `Square Meters`
-            StoreCode is `Store Code`
-
-            --where: CloseDate > @2015
-    }
-source: Orders is duckdb.table('../Contoso_1M/ParquetFiles/Orders.parquet')
-    extend {
-            rename:  
-            CurrencyCode is `Currency Code`
-            DeliveryDate is `Delivery Date`
-            OrderDate is `Order Date`
-
-
-            join_one: Store on StoreKey = Store.StoreKey
-    }
-
-
-
-
---test sources and queries below -  to check if dataset generation went fine
-source: Store_test is Store extend {
-    join_many: Orders on StoreKey = Orders.StoreKey
+source: customers is customer_base extend {
+    
+    accept:
+            CustomerKey
+            Gender
+            City
+            State
+            ZipCode
+            Country
+            Age
+            Occupation
+            Company
+            Latitude
+            Longitude
+            Continent
 }
 
--- why this returns anything?
-run: Store_test -> {
-    group_by: 
-    StoreKey
-     OpenDate
-      CloseDate
-    aggregate: order_count is Orders.count()
-    aggregate: min_order_date is Orders.OrderDate.min()
-    aggregate: max_order_date is Orders.OrderDate.max()
-
-}
--> {select: *
-where: order_count = 1}
-
-
-run: Orders -> {
-    aggregate: 
-    min_date is min(OrderDate)
-    max_date is max(OrderDate)
-    min_store_closed is Store.CloseDate.min()
-}
-
-
-run: CurrencyExchange -> {
-    aggregate: 
-    min_date is min(ExchangeDate)
-    max_date is max(ExchangeDate)
-}
