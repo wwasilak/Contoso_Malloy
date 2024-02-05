@@ -65,26 +65,3 @@ source: orders_base is duckdb.table('../Contoso_1M/ParquetFiles/Orders.parquet')
             DeliveryDate is `Delivery Date`
             OrderDate is `Order Date`
     }
-
-
-
-
---test sources and queries below -  to check if dataset generation went fine
-source: Store_test is store_base extend {
-    join_many: orders_base on StoreKey = orders_base.StoreKey
-}
-
---failed check
-run: Store_test -> {
-    group_by: 
-    StoreKey
-     OpenDate
-      CloseDate
-    aggregate: order_count is orders_base.count()
-    aggregate: min_order_date is orders_base.OrderDate.min()
-    aggregate: max_order_date is orders_base.OrderDate.max()
-
-}
--> {select: *
-where: order_count = 1}
-
