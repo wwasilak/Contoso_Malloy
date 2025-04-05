@@ -1,99 +1,18 @@
-## renderer_next
-import 'ContosoModelBase.malloy'
 
-source: currency_ex is currency_base
 
-source: customers is customer_base extend {
+
+source: currency_ex is duckdb.table('../Contoso_1M/ParquetFiles/currencyexchange.parquet')
+
+source: customer is duckdb.table('../Contoso_1M/ParquetFiles/customer.parquet')
     
-    accept:
-            CustomerKey
-            Gender
-            City
-            State
-            ZipCode
-            Country
-            Age
-            Occupation
-            Company
-            Latitude
-            Longitude
-            Continent
-}
+source: calendar is duckdb.table('../Contoso_1M/ParquetFiles//date.parquet')
 
+source: store is duckdb.table('../Contoso_1M/ParquetFiles/store.parquet')
 
-source: orders is orders_base extend {
+source: product is duckdb.table('../Contoso_1M/ParquetFiles/product.parquet')
 
-    dimension:
-        order_month is OrderDate::timestamp.month
-    measure:
-        order_count is count()
-        all_orders is all(count())
-        all_months is all(count(order_month)) 
-        avg_order_count is div(all_orders, all_months)
+source: order_rows is duckdb.table('../Contoso_1M/ParquetFiles/orderrows.parquet')
 
-    
-        
-    # bar size=spark
-    view: orders_2019 is {
-        where: OrderDate::timestamp ? @2019
-        group_by: order_month
-        aggregate: number_of_orders is order_count
-        --order_by: order_month
-    }
-}
+source: orders is duckdb.table('../Contoso_1M/ParquetFiles/orders.parquet')
 
-    run: orders -> {
-    group_by: StoreKey
-    aggregate: order_count
-    nest: 
-    orders_2019
-    }
-
-
-
-
---     view: spc is {
---         where: OrderDate::timestamp ? @2019 | @2020
---         group_by: 
---             order_month
---         aggregate: 
---             order_count
---             all_orders
---             all_months
---             avg_order_count
---         calculate: 
---             moving_range is (abs(order_count - lag(order_count)))
---     }
---     ->{
---         group_by: 
---             order_month
---             order_count
---             avg_order_count
---             moving_range   
---        aggregate: 
---             avg_moving_range is div(all(moving_range.sum()), all(count(order_month))-1)
-
---     }
---     -> {
---         group_by:
---             order_month
---             order_count
---             avg_order_count
---             moving_range
---             avg_moving_range
---             upper_limit is avg_order_count + avg_moving_range*2.66
---             lower_limit is avg_order_count - avg_moving_range*2.66
---             range_limit is avg_moving_range*3.269
---         order_by: order_month
---     }
--- }
-
-
--- run: orders -> {
--- group_by: StoreKey
--- nest: spc
--- limit: 1
--- }
-
-
-
+source: sales is duckdb.table('../Contoso_1M/ParquetFiles/sales.parquet')
