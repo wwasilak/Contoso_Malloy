@@ -1,18 +1,44 @@
 
 
 
-source: currency_ex is duckdb.table('../Contoso_1M/ParquetFiles/currencyexchange.parquet')
+source: currency_ex is duckdb.table('../Contoso_Malloy/ParquetFiles/currencyexchange.parquet')
 
-source: customer is duckdb.table('../Contoso_1M/ParquetFiles/customer.parquet')
+source: customer is duckdb.table('../Contoso_Malloy/ParquetFiles/customer.parquet') extend {
+    primary_key: CustomerKey
+}
     
-source: calendar is duckdb.table('../Contoso_1M/ParquetFiles//date.parquet')
+source: calendar is duckdb.table('../Contoso_Malloy/ParquetFiles//date.parquet') extend {
+    primary_key: DateKey
+}
 
-source: store is duckdb.table('../Contoso_1M/ParquetFiles/store.parquet')
+source: store is duckdb.table('../Contoso_Malloy/ParquetFiles/store.parquet') extend {
+    primary_key: StoreKey
+}
 
-source: product is duckdb.table('../Contoso_1M/ParquetFiles/product.parquet')
+source: product is duckdb.table('../Contoso_Malloy/ParquetFiles/product.parquet') extend {
+    primary_key: ProductKey
+}
 
-source: order_rows is duckdb.table('../Contoso_1M/ParquetFiles/orderrows.parquet')
+source: order_rows is duckdb.table('../Contoso_Malloy/ParquetFiles/orderrows.parquet') extend {
+    
+    join_one: product with ProductKey 
+}
 
-source: orders is duckdb.table('../Contoso_1M/ParquetFiles/orders.parquet')
+source: orders is duckdb.table('../Contoso_Malloy/ParquetFiles/orders.parquet') extend {
+    primary_key: OrderKey
 
-source: sales is duckdb.table('../Contoso_1M/ParquetFiles/sales.parquet')
+    join_many: order_rows on OrderKey = order_rows.OrderKey
+    join_one: customer with CustomerKey
+    join_one: store with StoreKey
+    join_one: calendar on DT = calendar.`Date`
+    join_one: currency_ex on CurrencyCode = currency_ex.ToCurrency and DT = currency_ex.`Date`
+        where: currency_ex.FromCurrency = 'USD'
+}
+
+
+source: sales is duckdb.table('../Contoso_Malloy/ParquetFiles/sales.parquet') extend {
+
+    join_one: customer with CustomerKey
+    join_one: store with StoreKey
+    join_one: calendar on OrderDate = calendar.`Date`
+}
