@@ -31,7 +31,8 @@ source: orders is duckdb.table('../Contoso_Malloy/ParquetFiles/orders.parquet') 
     join_one: customer with CustomerKey
     join_one: store with StoreKey
     join_one: calendar on DT = calendar.`Date`
-    join_one: currency_ex on CurrencyCode = currency_ex.FromCurrency and DT = currency_ex.`Date`
+    join_one: currency_ex on CurrencyCode = currency_ex.ToCurrency and DT = currency_ex.`Date`
+        where: currency_ex.FromCurrency = 'USD'
 }
 
 
