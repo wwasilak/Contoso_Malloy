@@ -38,7 +38,12 @@ source: orders is duckdb.table('../Contoso_Malloy/ParquetFiles/orders.parquet') 
     join_one: currency_ex on CurrencyCode = currency_ex.ToCurrency and OrderDate = currency_ex.`Date`
         where: currency_ex.FromCurrency = 'USD'
 
-    dimension: YearMonth is OrderDate.month
+    dimension: 
+        YearMonth is OrderDate.month
+        `Year` is OrderDate.year
+
+    measure:
+        Total_Sales is order_rows.Revenue.sum()
 
     
 }
