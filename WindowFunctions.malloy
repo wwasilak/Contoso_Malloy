@@ -1,0 +1,13 @@
+import 'ContosoModel.malloy'
+
+# line_chart size=xl
+query: sales_with_running_total1 is orders -> {
+# x
+group_by: `Delivery Date` is DeliveryDate::date
+# y
+aggregate: Sales is order_rows.Revenue.sum()
+# y
+calculate: Moving3MonthAverage is avg_moving(Sales,90)
+order_by: 1
+limit: 5000
+}
