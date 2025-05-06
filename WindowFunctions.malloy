@@ -1,0 +1,32 @@
+import 'ContosoModel.malloy'
+
+-- TOTAL SALES & 3 MONTH MOVING AVERAGE CHART
+# line_chart {size=xl, title='Moving Average'}
+query: sales_moving_avg is orders -> {
+# x
+group_by: YearMonth
+# y
+aggregate: Sales is order_rows.Revenue.sum()
+# y
+calculate: Moving3MonthAverage is avg_moving(Sales,3)
+order_by: 1
+limit: 5000
+}
+
+-- TOTAL SALES YTD CHART
+-- # line_chart {size=xl, title='Sales YTD'}
+query: sales_ytd is orders -> {
+group_by: 
+# hidden
+`Year`
+# x
+YearMonth
+aggregate: 
+# hidden 
+Total_Sales
+calculate: 
+# y
+Sales_YTD is sum_cumulative (Total_Sales) {partition_by: `Year` order_by:YearMonth }
+order_by: YearMonth
+limit: 5000
+}

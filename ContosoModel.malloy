@@ -21,18 +21,31 @@ source: product is duckdb.table('../Contoso_Malloy/ParquetFiles/product.parquet'
 
 source: order_rows is duckdb.table('../Contoso_Malloy/ParquetFiles/orderrows.parquet') extend {
     
-    join_one: product with ProductKey 
+    join_one: product with ProductKey
+
+     dimension: Revenue is Quantity * NetPrice  
 }
 
 source: orders is duckdb.table('../Contoso_Malloy/ParquetFiles/orders.parquet') extend {
     primary_key: OrderKey
 
+    rename: OrderDate is DT
+
     join_many: order_rows on OrderKey = order_rows.OrderKey
     join_one: customer with CustomerKey
     join_one: store with StoreKey
-    join_one: calendar on DT = calendar.`Date`
-    join_one: currency_ex on CurrencyCode = currency_ex.ToCurrency and DT = currency_ex.`Date`
+    join_one: calendar on OrderDate = calendar.`Date`
+    join_one: currency_ex on CurrencyCode = currency_ex.ToCurrency and OrderDate = currency_ex.`Date`
         where: currency_ex.FromCurrency = 'USD'
+
+    dimension: 
+        YearMonth is OrderDate.month
+        `Year` is OrderDate.year
+
+    measure:
+        Total_Sales is order_rows.Revenue.sum()
+
+    
 }
 
 
@@ -41,4 +54,16 @@ source: sales is duckdb.table('../Contoso_Malloy/ParquetFiles/sales.parquet') ex
     join_one: customer with CustomerKey
     join_one: store with StoreKey
     join_one: calendar on OrderDate = calendar.`Date`
+}
+
+# line_chart size=xl
+query: sales_with_running_total is orders -> {
+# x
+group_by: YearMonth
+# y
+aggregate: Sales is order_rows.Revenue.sum()
+# y
+calculate: Moving3MonthAverage is avg_moving(Sales,3)
+order_by: YearMonth
+limit: 5000
 }
