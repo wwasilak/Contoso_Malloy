@@ -41,6 +41,7 @@ source: orders is duckdb.table('../Contoso_Malloy/ParquetFiles/orders.parquet') 
     dimension: 
         YearMonth is OrderDate.month
         `Year` is OrderDate.year
+        `Month` is month(OrderDate)
 
     measure:
         Total_Sales is order_rows.Revenue.sum()
@@ -54,16 +55,4 @@ source: sales is duckdb.table('../Contoso_Malloy/ParquetFiles/sales.parquet') ex
     join_one: customer with CustomerKey
     join_one: store with StoreKey
     join_one: calendar on OrderDate = calendar.`Date`
-}
-
-# line_chart size=xl
-query: sales_with_running_total is orders -> {
-# x
-group_by: YearMonth
-# y
-aggregate: Sales is order_rows.Revenue.sum()
-# y
-calculate: Moving3MonthAverage is avg_moving(Sales,3)
-order_by: YearMonth
-limit: 5000
 }

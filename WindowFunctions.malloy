@@ -1,32 +1,50 @@
 import 'ContosoModel.malloy'
 
 -- TOTAL SALES & 3 MONTH MOVING AVERAGE CHART
-# line_chart {size=xl, title='Moving Average'}
+# line_chart {size=xl, title='3 Month Moving Average'}
 query: sales_moving_avg is orders -> {
-# x
-group_by: YearMonth
-# y
-aggregate: Sales is order_rows.Revenue.sum()
-# y
-calculate: Moving3MonthAverage is avg_moving(Sales,3)
-order_by: 1
-limit: 5000
+    # x
+    group_by: YearMonth
+    # y
+    aggregate: Total_Sales
+    # y
+    calculate: Moving3MonthAverage is avg_moving(Total_Sales,3)
+    order_by: YearMonth asc
+    limit: 5000
 }
 
 -- TOTAL SALES YTD CHART
--- # line_chart {size=xl, title='Sales YTD'}
+# line_chart {size=xl, title='Sales YTD'}
 query: sales_ytd is orders -> {
-group_by: 
-# hidden
-`Year`
-# x
-YearMonth
-aggregate: 
-# hidden 
-Total_Sales
-calculate: 
-# y
-Sales_YTD is sum_cumulative (Total_Sales) {partition_by: `Year` order_by:YearMonth }
-order_by: YearMonth
-limit: 5000
+    group_by: 
+    `Year`
+    YearMonth
+    aggregate: Total_Sales
+    calculate: Sales_YTD is sum_cumulative (Total_Sales) {partition_by: `Year` order_by:YearMonth }
+}
+->{
+    group_by:
+    # x
+    YearMonth
+    # y
+    aggregate: Sales_Ytd is Sales_YTD.sum()
+    order_by: YearMonth asc
+    limit: 5000
+}
+
+
+--  MOVING ANNUAL TOTAL (MAT)
+query: sales_mat is orders -> {
+    group_by: YearMonth
+    aggregate: Total_Sales
+    calculate: MAT is sum_moving(Total_Sales, 12)
+    order_by: YearMonth asc
+}
+
+--  MOVING QUARTERLY TOTAL (MQT)
+query: sales_mqt is orders -> {
+    group_by: YearMonth
+    aggregate: Total_Sales
+    calculate: MQT is sum_moving(Total_Sales, 3)
+    order_by: YearMonth asc
 }
