@@ -23,7 +23,9 @@ source: order_rows is duckdb.table('../Contoso_Malloy/ParquetFiles/orderrows.par
     
     join_one: product with ProductKey
 
-     dimension: Revenue is Quantity * NetPrice  
+     dimension: 
+     Revenue is Quantity * NetPrice
+     Cost is Quantity * UnitCost  
 }
 
 source: orders is duckdb.table('../Contoso_Malloy/ParquetFiles/orders.parquet') extend {
@@ -44,8 +46,45 @@ source: orders is duckdb.table('../Contoso_Malloy/ParquetFiles/orders.parquet') 
         `Month` is month(OrderDate)
 
     measure:
+        Count_Orders is count()
+        Total_Cost is order_rows.Cost.sum()
         Total_Sales is order_rows.Revenue.sum()
+        Margin is Total_Sales - Total_Cost
+        # percent
+        Margin_Percent is Margin/Total_Sales
 
+
+
+    view: v_year_month is {
+        group_by:
+        `Year`
+        `Month`
+        order_by: `Year` desc, `Month` asc
+    }
+
+    view: v_category is {
+        group_by: Category is order_rows.product.CategoryName  
+    }
+
+    view: v_subcategory is {
+        group_by: Subategory is order_rows.product.SubCategoryName 
+    }
+
+    view: v_metrics_sales is {
+        aggregate:
+             # number='0.0,,"M"' 
+            Total_Sales
+            Margin_Percent
+    }
+
+    view: sales_by_year is 
+        v_year_month 
+        + v_metrics_sales
+
+    view: sales_by_category is 
+        v_category + v_metrics_sales 
+        + {nest: v_subcategory + v_metrics_sales} 
+        + {order_by: Total_Sales desc}
     
 }
 
