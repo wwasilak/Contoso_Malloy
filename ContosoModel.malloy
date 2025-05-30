@@ -81,10 +81,14 @@ source: orders is duckdb.table('../Contoso_Malloy/ParquetFiles/orders.parquet') 
         v_year_month 
         + v_metrics_sales
 
-    view: sales_by_category is 
+   view: sales_by_category is 
         v_category + v_metrics_sales 
-        + {nest: v_subcategory + v_metrics_sales} 
-        + {order_by: Total_Sales desc}
+        + {nest: 
+            Details is v_subcategory 
+            + v_metrics_sales 
+            + {order_by: Total_Sales desc}
+        } 
+
     
 }
 
