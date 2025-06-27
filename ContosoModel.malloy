@@ -5,6 +5,7 @@ source: currency_ex is duckdb.table('../Contoso_Malloy/ParquetFiles/currencyexch
 
 source: customer is duckdb.table('../Contoso_Malloy/ParquetFiles/customer.parquet') extend {
     primary_key: CustomerKey
+
 }
     
 source: calendar is duckdb.table('../Contoso_Malloy/ParquetFiles//date.parquet') extend {
@@ -19,13 +20,13 @@ source: product is duckdb.table('../Contoso_Malloy/ParquetFiles/product.parquet'
     primary_key: ProductKey
 }
 
-source: order_rows is duckdb.table('../Contoso_Malloy/ParquetFiles/orderrows.parquet') extend {
+source: orderrows is duckdb.table('../Contoso_Malloy/ParquetFiles/orderrows.parquet') extend {
     
     join_one: product with ProductKey
 
      dimension: 
-     Revenue is Quantity * NetPrice
-     Cost is Quantity * UnitCost  
+     _Revenue is Quantity * NetPrice
+     _Cost is Quantity * UnitCost  
 }
 
 source: orders is duckdb.table('../Contoso_Malloy/ParquetFiles/orders.parquet') extend {
@@ -33,7 +34,7 @@ source: orders is duckdb.table('../Contoso_Malloy/ParquetFiles/orders.parquet') 
 
     rename: OrderDate is DT
 
-    join_many: order_rows on OrderKey = order_rows.OrderKey
+    join_many: orderrows on OrderKey = orderrows.OrderKey
     join_one: customer with CustomerKey
     join_one: store with StoreKey
     join_one: calendar on OrderDate = calendar.`Date`
@@ -41,53 +42,57 @@ source: orders is duckdb.table('../Contoso_Malloy/ParquetFiles/orders.parquet') 
         where: currency_ex.FromCurrency = 'USD'
 
     dimension: 
-        YearMonth is OrderDate.month
-        `Year` is OrderDate.year
-        `Month` is month(OrderDate)
+        _YearMonth is OrderDate.month
+        _Year is OrderDate.year
+        _Month is month(OrderDate)
 
     measure:
         Count_Orders is count()
-        Total_Cost is order_rows.Cost.sum()
-        Total_Sales is order_rows.Revenue.sum()
+        Total_Cost is orderrows._Cost.sum()
+        Total_Sales is orderrows._Revenue.sum()
+        Total_Sales_CY is Total_Sales {where: OrderDate ~ f'this year'}
+        Total_Sales_PY is Total_Sales {where: OrderDate ~ f'last year'}
         Margin is Total_Sales - Total_Cost
         # percent
         Margin_Percent is Margin/Total_Sales
 
 
 
-    view: v_year_month is {
-        group_by:
-        `Year`
-        `Month`
-        order_by: `Year` desc, `Month` asc
-    }
+    view: v_YearMonth is {group_by: _YearMonth}
 
-    view: v_category is {
-        group_by: Category is order_rows.product.CategoryName  
-    }
+    view: v_YearMonthPY is {group_by: _YearMonth where: _Year ? now.year - 1 year}
 
-    view: v_subcategory is {
-        group_by: Subategory is order_rows.product.SubCategoryName 
-    }
+    view: v_Category is {group_by: Category is orderrows.product.CategoryName}
 
-    view: v_metrics_sales is {
+    view: v_Subcategory is {group_by: Subategory is orderrows.product.SubCategoryName}
+
+    view: v_MaxYear is {aggregate: Max_Year is max(OrderDate.year)}
+
+
+    view: v_SalesMetrics is {
         aggregate:
              # number='0.0,,"M"' 
-            Total_Sales
+            Total_Sales_CY
             Margin_Percent
     }
 
-    view: sales_by_year is 
-        v_year_month 
-        + v_metrics_sales
+    view: v_SalesByYear is v_YearMonth + v_SalesMetrics
 
-   view: sales_by_category is 
-        v_category + v_metrics_sales 
+   view: v_SalesByCategory is 
+        v_Category + v_SalesMetrics 
         + {nest: 
-            Details is v_subcategory 
-            + v_metrics_sales 
-            + {order_by: Total_Sales desc}
-        } 
+            Details is v_Subcategory 
+            + v_SalesMetrics
+            + {order_by: Total_Sales_CY desc}
+        }
+
+    
+-- not possible
+    -- view: py_test is
+    -- {
+    --     aggregate: Total_Sales {where: OrderDate not  in (v_date_py)}
+    -- }
+    -- v_date_py + v_metrics_sales -> {aggregate: Total_Sales_py is Total_Sales.sum()}
 
     
 }
@@ -99,3 +104,24 @@ source: sales is duckdb.table('../Contoso_Malloy/ParquetFiles/sales.parquet') ex
     join_one: store with StoreKey
     join_one: calendar on OrderDate = calendar.`Date`
 }
+
+
+
+
+
+run: orders -> v_Subcategory + v_SalesMetrics
+ + {limit:10}
+ + {
+    # number='0.0,,"M"'
+    aggregate:  Total_Sales_PY }
+
+
+# dashboard
+run: orders -> {
+    nest: v_SalesMetrics
+    nest: v_SalesByCategory
+    nest: v_SalesByYear
+
+}
+
+
