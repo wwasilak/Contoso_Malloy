@@ -5,6 +5,7 @@ source: currency_ex is duckdb.table('../Contoso_Malloy/ParquetFiles/currencyexch
 
 source: customer is duckdb.table('../Contoso_Malloy/ParquetFiles/customer.parquet') extend {
     primary_key: CustomerKey
+
 }
     
 source: calendar is duckdb.table('../Contoso_Malloy/ParquetFiles//date.parquet') extend {
@@ -42,8 +43,8 @@ source: orders is duckdb.table('../Contoso_Malloy/ParquetFiles/orders.parquet') 
 
     dimension: 
         YearMonth is OrderDate.month
-        `Year` is OrderDate.year
-        `Month` is month(OrderDate)
+        _Year is OrderDate.year
+        _Month is month(OrderDate)
 
     measure:
         Count_Orders is count()
@@ -57,9 +58,15 @@ source: orders is duckdb.table('../Contoso_Malloy/ParquetFiles/orders.parquet') 
 
     view: v_year_month is {
         group_by:
-        `Year`
-        `Month`
-        order_by: `Year` desc, `Month` asc
+        _Year
+        _Month
+        order_by: _Year desc, _Month asc
+    }
+
+    view: v_date_py is {
+        group_by:
+        OrderDate
+        where: _Year ? now.year - 2 year
     }
 
     view: v_category is {
@@ -89,6 +96,12 @@ source: orders is duckdb.table('../Contoso_Malloy/ParquetFiles/orders.parquet') 
             + {order_by: Total_Sales desc}
         } 
 
+    -- view: py_test is
+    -- {
+    --     aggregate: Total_Sales {where: OrderDate not  in (v_date_py)}
+    -- }
+    -- v_date_py + v_metrics_sales -> {aggregate: Total_Sales_py is Total_Sales.sum()}
+
     
 }
 
@@ -99,3 +112,57 @@ source: sales is duckdb.table('../Contoso_Malloy/ParquetFiles/sales.parquet') ex
     join_one: store with StoreKey
     join_one: calendar on OrderDate = calendar.`Date`
 }
+
+source: customer_cohort is customer extend {
+
+    primary_key: CustomerKey
+
+    join_many: orders on CustomerKey = orders.CustomerKey
+
+    dimension: FirstOrderDate is least(orders.OrderDate)
+}
+
+run: orders extend {
+    join_one: customer_cohort on customer_cohort.CustomerKey = CustomerKey
+    measure: customer_count is count(CustomerKey)
+} -> {
+
+  where: 
+    customer_cohort.FirstOrderDate.month ? @2022 for 6 months
+  group_by: 
+    customer_cohort.FirstOrderDate.month
+  aggregate: 
+    customer_count
+    # line_chart 
+    nest: cohorts is {
+        where: YearMonth = customer_cohort.FirstOrderDate.month for 6 months
+        group_by: YearMonth
+        aggregate: 
+        `Users in Cohort that Ordered` is customer_count
+        # percent
+        `Percent of cohort that ordered` is customer_count/all(customer_count)
+        order_by: 1
+    }
+}
+
+run: orders -> v_subcategory + v_metrics_sales
+ + {limit:10}
+ 
+ + {
+    # number='0.0,,"M"'
+    aggregate: TS is Total_Sales {where: OrderDate ~ f'last year'}}
+
+
+# dashboard
+run: orders -> {
+    nest: v_metrics_sales
+    nest: v_category + v_metrics_sales
+    nest: v_year_month + v_metrics_sales
+
+}
+
+run: orders -> {aggregate: TS is Total_Sales {where: OrderDate ~ f'last year'}}
+
+run: orders -> v_date_py + Total_Sales
+
+run: orders -> {aggregate: Total_Sales_py is Total_Sales {where: OrderDate ~ f'last year'}}
