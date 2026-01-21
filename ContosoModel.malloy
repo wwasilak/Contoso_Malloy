@@ -38,8 +38,8 @@ source: orders is duckdb.table('../Contoso_Malloy/ParquetFiles/orders.parquet') 
     join_one: customer with CustomerKey
     join_one: store with StoreKey
     join_one: calendar on OrderDate = calendar.`Date`
-    join_one: currency_ex on CurrencyCode = currency_ex.FromCurrency and OrderDate = currency_ex.`Date`
-        and currency_ex.ToCurrency = 'USD'
+    join_one: currency_ex on CurrencyCode = currency_ex.ToCurrency and OrderDate = currency_ex.`Date`
+        where: currency_ex.FromCurrency = 'USD'
 
     dimension: 
         _YearMonth is OrderDate.month
@@ -121,17 +121,6 @@ run: orders -> {
     nest: v_SalesMetrics
     nest: v_SalesByCategory
     nest: v_SalesByYear
-
-}
-
-run: orders -> {
-    group_by:
-    OrderKey
-    OrderCurrency is CurrencyCode
-    ExchangeRate is currency_ex.Exchange
-        aggregate:     
-    Total_Sales
-    Converted_to_USD is Total_Sales * currency_ex.Exchange
 
 }
 
