@@ -16,10 +16,10 @@ Mini project #3  : trying to apply Knowledge Plane concepts using Malloy. The co
 
 Articles:
 
-#1 https://commonsensedata.substack.com/p/the-quest-for-semantic-architecture
-#2 https://commonsensedata.substack.com/p/semantic-linking-the-aboutness-of
-#3 https://commonsensedata.substack.com/p/semantic-linking-managing-mappings
-#4 https://commonsensedata.substack.com/p/building-semantics-with-conceptual
+- https://commonsensedata.substack.com/p/the-quest-for-semantic-architecture
+- https://commonsensedata.substack.com/p/semantic-linking-the-aboutness-of
+- https://commonsensedata.substack.com/p/semantic-linking-managing-mappings
+- https://commonsensedata.substack.com/p/building-semantics-with-conceptual
 
 
 Idea behing this excercise: checking if a Malloy semantic model can be used to create Knowledge and Data Planes as described by Juha Korpela. Knowledge Plane is a layer where business concepts, definitions and relationships are described. It should be separate from the Data Plane. Knowledge Plane is implemented as a MOTLY file. Malloy model only links to concepts through # concept annotations, so meaning lives in one place and is never duplicated across models. An exporter reads both, validates that every linked concept actually exists in the Knowledge Plane, and generates two outputs: an RDF graph and a Markdown glossary for use with AI agents. The result is an executable model that also serves as its own conceptual documentation.
