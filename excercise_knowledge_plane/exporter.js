@@ -203,7 +203,7 @@ for (const { dp } of isAbout)
 T.push('\n# --- SEMANTIC LINKING: isAbout ---');
 for (const { dp, concept } of isAbout)
   T.push('<' + DP_BASE + dp + '> kp:isAbout ' + concept + ' .');
-fs.writeFileSync(path.join(BUILD, 'knowledge_plane.ttl'), T.join('\n') + '\n');
+fs.writeFileSync(path.join(BUILD, 'knowledge_map.ttl'), T.join('\n') + '\n');
 
 // ---- 6. OUTPUT 2: Markdown glossary -----------------------------------------
 const M = ['# Knowledge Plane — Glossary', '',
@@ -240,7 +240,7 @@ if (allUnresolved.length) {
   for (const u of allUnresolved) (by[u.model+'/'+u.src] = by[u.model+'/'+u.src] || []).push(u.col);
   for (const k of Object.keys(by).sort()) M.push('- `' + k + '`: ' + by[k].join(', '));
 }
-fs.writeFileSync(path.join(BUILD, 'knowledge_plane.md'), M.join('\n') + '\n');
+fs.writeFileSync(path.join(BUILD, 'knowledge_map.md'), M.join('\n') + '\n');
 
 // ---- report -----------------------------------------------------------------
 const shared = Object.keys(touch).filter(u => touch[u].size > 1);
@@ -248,4 +248,4 @@ console.log('\nConcepts used: ' + usedConcepts.size + ' / ' + Object.keys(canon)
 console.log('Shared concepts (>1 model): ' + shared.length + (shared.length ? ' -> ' + shared.join(', ') : ''));
 console.log('isAbout links: ' + isAbout.length);
 console.log('Unresolved public fields: ' + allUnresolved.length);
-console.log('\n-> build/knowledge_plane.ttl\n-> build/knowledge_plane.md');
+console.log('\n-> build/knowledge_map.ttl\n-> build/knowledge_map.md');
