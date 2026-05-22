@@ -7,7 +7,7 @@
 // through the same Malloy/Publisher MCP it already uses for data — no separate
 // triplestore required.
 //
-// The source file is knowledge_plane.ttl (RDF/Turtle). Raw RDF is a flat list
+// The source file is knowledge_map.ttl (RDF/Turtle). Raw RDF is a flat list
 // of (subject, predicate, object) triples; querying that directly is painful.
 // So each source below PIVOTS the triples into a wide, named table that matches
 // how the concept actually looks. An agent should read these four sources, not
@@ -36,7 +36,7 @@
 # concept_kind { description = "entity | attribute | measure | defined_class" }
 source: concepts is duckdb.sql("""
   WITH t AS (SELECT subject, predicate, object
-             FROM read_rdf('excercise_knowledge_plane/knowledge_plane.ttl'))
+             FROM read_rdf('excercise_knowledge_plane/knowledge_map.ttl'))
   SELECT
     replace(s.subject, 'https://yourorg.example/kp#', 'kp:')      AS concept_uri,
     kind.object                                                  AS concept_kind,
@@ -107,7 +107,7 @@ extend {
 // ---------------------------------------------------------------------------
 source: relationships is duckdb.sql("""
   WITH t AS (SELECT subject, predicate, object
-             FROM read_rdf('excercise_knowledge_plane/knowledge_plane.ttl'))
+             FROM read_rdf('excercise_knowledge_plane/knowledge_map.ttl'))
   SELECT
     replace(s.subject, 'https://yourorg.example/kp#', 'kp:')   AS relationship_uri,
     lbl.object                                                 AS verb,
@@ -150,7 +150,7 @@ extend {
 // ---------------------------------------------------------------------------
 source: concept_attributes is duckdb.sql("""
   WITH t AS (SELECT subject, predicate, object
-             FROM read_rdf('excercise_knowledge_plane/knowledge_plane.ttl'))
+             FROM read_rdf('excercise_knowledge_plane/knowledge_map.ttl'))
   SELECT
     replace(subject, 'https://yourorg.example/kp#', 'kp:') AS entity_concept,
     replace(object,  'https://yourorg.example/kp#', 'kp:') AS attribute_concept
@@ -183,7 +183,7 @@ extend {
 // ---------------------------------------------------------------------------
 source: data_bindings is duckdb.sql("""
   WITH t AS (SELECT subject, predicate, object
-             FROM read_rdf('excercise_knowledge_plane/knowledge_plane.ttl'))
+             FROM read_rdf('excercise_knowledge_plane/knowledge_map.ttl'))
   SELECT
     replace(object, 'https://yourorg.example/kp#', 'kp:')   AS concept_uri,
     split_part(replace(subject, 'https://yourorg.example/dp/', ''), '#', 1) AS model,
