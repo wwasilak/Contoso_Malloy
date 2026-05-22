@@ -32,8 +32,6 @@ sales.malloy — a Malloy model following Korpela's naming conventions; sources 
 exporter.js — reads the KP and the model, validates that every linked concept exists, and generates the outputs.
 knowledge_plane.ttl / knowledge_plane.md — generated outputs: an RDF graph and a glossary (for AI agent)
 
-also
-sales_initial_version.malloy - the initial version of 'coneptualized' Malloy model - keeping it here so that both versions can be compared. For me fully annotated model is less readable. As mentioned in the comments below i need to test which model (fully annotated or only concept annotations) works better with AI.
 
 Some comments:
 - done mostly by talking with Claude
