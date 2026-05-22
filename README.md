@@ -27,10 +27,10 @@ Idea behing this excercise: checking if a Malloy semantic model can be used to c
 
 Folder: excercise_knowledge_plane
 
-knowledge_plane.motly — the canonical Knowledge Plane: concepts, definitions and relationships, manual maintenance
-sales.malloy — a Malloy model following Korpela's naming conventions; sources and fields are linked to concepts via # concept annotations.
-exporter.js — reads the KP and the model, validates that every linked concept exists, and generates the outputs.
-knowledge_plane.ttl / knowledge_plane.md — generated outputs: an RDF graph and a glossary (for AI agent)
+- knowledge_plane.motly — the canonical Knowledge Plane: concepts, definitions and relationships, manual maintenance
+- sales.malloy — a Malloy model following Korpela's naming conventions; sources and fields are linked to concepts via # concept annotations.
+- exporter.js — reads the KP and the model, validates that every linked concept exists, and generates the outputs.
+- knowledge_plane.ttl / knowledge_plane.md — generated outputs: an RDF graph and a glossary (for AI agent)
 
 
 Some comments:
