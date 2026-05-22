@@ -17,11 +17,11 @@ Folder: excercise_knowledge_plane
 - knowledge_plane.motly - the canonical Knowledge Plane: concepts, definitions and relationships, manual maintenance
 - sales.malloy - a Malloy model following Korpela's naming conventions; sources and fields are linked to concepts via # concept annotations.
 - exporter.js - reads the KP and the model, validates that every linked concept exists, and generates the outputs.
-- knowledge_plane.ttl / knowledge_plane.md - generated outputs: an RDF graph and a glossary (for AI agent)
+- knowledge_map.ttl / knowledge_map.md - generated outputs: an RDF graph and a glossary (for AI agent). Markdown file for simple project. TTL file for more complex ones.
 
-So Claude suggested to use knowledge_plane.md for small project and knowledge_plane.ttl in case scale goes up. But with .ttl file he mentioned to use RDF database + MCP Server for AI Agent. This seems complex to me. I've checked and there is a DuckDb extension to read ttl files: https://duckdb.org/community_extensions/extensions/rdf . With this extension ttl file can be turned into Malloy source and AI agent could query it with Malloy/Publisher MCP server (this needs to be tested). Asked Claude to create a proper Malloy model and after fixing few errors it is working fine. 
+So Claude suggested to use knowledge_map.md for small project and knowledge_map.ttl in case scale goes up. But with .ttl file he mentioned to use RDF database + MCP Server for AI Agent. This seems complex to me. I've checked and there is a DuckDb extension to read ttl files: https://duckdb.org/community_extensions/extensions/rdf . With this extension ttl file can be turned into Malloy source and AI agent could query it with Malloy/Publisher MCP server (this needs to be tested). Asked Claude to create a proper Malloy model and after fixing few errors it is working fine. 
 
-- knowledge_plane.malloy - model which allows AI agent to understand the knowledge_plane and how it links to data plane. 
+- knowledge_map.malloy - Malloy model which allows AI agent to query ttl file and understand how the Knowledge Plane links to the Data Plane. 
 
 
 Some comments:
