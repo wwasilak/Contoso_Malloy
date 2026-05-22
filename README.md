@@ -13,5 +13,3 @@ https://malloydata.github.io/documentation/
 --------------------------------------------------------
 
 Mini project #3  (folder: excercise_knowledge_plane): trying to apply Knowledge Plane concepts using Malloy. The concepts come from Juha Korpela substack articles. 
-
-
