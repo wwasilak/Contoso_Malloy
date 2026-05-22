@@ -1,0 +1,93 @@
+#! schema=x-kp-canonical url="./schemas/knowledge_plane.motly"
+
+# =============================================================================
+# CANONICAL KNOWLEDGE PLANE  —  single source of truth for concepts.
+# Edited by hand. Malloy models only REFERENCE these URIs; never define them.
+# MOTLY: a concept's value is its kind; its properties carry definition etc.
+# =============================================================================
+
+namespace = "https://yourorg.example/kp#"
+
+concepts: {
+
+  # ---- ENTITIES ---------------------------------------------------------------
+  `kp:Customer` = entity {
+    label = Customer
+    definition = "A natural or legal person who buys products from the company."
+    synonyms = [buyer]
+    steward = Sales
+  }
+  `kp:Order` = entity {
+    label = Order
+    definition = "A purchase transaction placed by a customer at a store on a given date, composed of one or more order lines."
+    steward = Sales
+  }
+  `kp:OrderLine` = entity {
+    label = "Order Line"
+    definition = "A single line on an order, recording one product, its quantity and the prices applied at sale time."
+    synonyms = ["order row"]
+    steward = Sales
+  }
+  `kp:Product` = entity {
+    label = Product
+    definition = "A sellable item offered to customers, identified by a stable product key."
+    steward = Merchandising
+  }
+  `kp:Store` = entity {
+    label = Store
+    definition = "A physical or online point of sale where orders are placed."
+    steward = "Retail Operations"
+  }
+  `kp:CalendarDate` = entity {
+    label = "Calendar Date"
+    definition = "A single calendar day, used as the temporal anchor for transactions and reporting periods."
+    steward = Finance
+  }
+  `kp:CurrencyExchangeRate` = entity {
+    label = "Currency Exchange Rate"
+    definition = "The daily rate for converting an amount from one currency into a reporting currency."
+    steward = Finance
+  }
+
+  # ---- DEFINED CLASS ----------------------------------------------------------
+  `kp:ActiveCustomer` = defined_class {
+    label = "Active Customer"
+    definition = "A customer with at least one order in the last 2 years."
+    subtype_of = "kp:Customer"
+    membership_rule = "made_an_order count > 0 within last 2 years"
+    steward = Sales
+  }
+
+  # ---- ATTRIBUTES -------------------------------------------------------------
+  `kp:CustomerAge`        = attribute { label = "Customer Age"        definition = "Age of the customer in years." }
+  `kp:CustomerGender`     = attribute { label = "Customer Gender"     definition = "Gender of the customer." }
+  `kp:CustomerOccupation` = attribute { label = "Customer Occupation" definition = "Stated occupation of the customer." }
+  `kp:CustomerCountry`    = attribute { label = "Customer Country"    definition = "Country of residence of the customer." }
+  `kp:CustomerCity`       = attribute { label = "Customer City"       definition = "City of residence of the customer." }
+  `kp:StoreCountry`       = attribute { label = "Store Country"       definition = "Country in which the store operates." }
+  `kp:ProductBrand`       = attribute { label = "Product Brand"       definition = "Brand under which the product is sold." }
+  `kp:ProductCategory`    = attribute { label = "Product Category"    definition = "Top-level merchandising category of the product." }
+  `kp:ProductUnitCost`    = attribute { label = "Product Unit Cost"   definition = "Cost to the company of one unit of the product." }
+  `kp:ProductUnitPrice`   = attribute { label = "Product Unit Price"  definition = "List selling price of one unit of the product." }
+  `kp:OrderDate`          = attribute { label = "Order Date"          definition = "The calendar date on which the order was placed." }
+  `kp:LineQuantity`       = attribute { label = "Line Quantity"       definition = "Number of product units on the order line." }
+
+  # ---- MEASURES ---------------------------------------------------------------
+  `kp:LineRevenue`   = measure { label = "Line Revenue"   definition = "Gross revenue for one order line: quantity times net price." }
+  `kp:LineCost`      = measure { label = "Line Cost"      definition = "Cost of goods sold for one order line: quantity times unit cost." }
+  `kp:TotalSales`    = measure { label = "Total Sales"    definition = "Sum of line revenue across all order lines in scope." }
+  `kp:TotalCost`     = measure { label = "Total Cost"     definition = "Sum of line cost across all order lines in scope." }
+  `kp:Margin`        = measure { label = Margin           definition = "Gross margin: total sales minus total cost." }
+  `kp:MarginPercent` = measure { label = "Margin Percent" definition = "Gross margin expressed as a ratio of total sales." }
+  `kp:OrderCount`    = measure { label = "Order Count"    definition = "Number of distinct orders in scope." }
+}
+
+# ---- RELATIONSHIPS ------------------------------------------------------------
+# A relationship's value is its verb-phrase label; properties carry domain/range.
+relationships: {
+  `kp:isPlacedBy`    = "is placed by"    { domain = "kp:Order"     range = "kp:Customer" }
+  `kp:isPlacedAt`    = "is placed at"    { domain = "kp:Order"     range = "kp:Store" }
+  `kp:occursOn`      = "occurs on"       { domain = "kp:Order"     range = "kp:CalendarDate" }
+  `kp:consistsOf`    = "consists of"     { domain = "kp:Order"     range = "kp:OrderLine" }
+  `kp:recordsSaleOf` = "records sale of" { domain = "kp:OrderLine" range = "kp:Product" }
+}

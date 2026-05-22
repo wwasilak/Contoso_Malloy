@@ -1,0 +1,184 @@
+@prefix kp:   <https://yourorg.example/kp#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+
+# --- KNOWLEDGE PLANE: concepts ---
+kp:ActiveCustomer a owl:Class ;
+    skos:prefLabel "Active Customer" ;
+    skos:definition "A customer with at least one order in the last 2 years." ;
+    rdfs:subClassOf kp:Customer ;
+    kp:membershipRule "made_an_order count > 0 within last 2 years" ;
+    kp:conceptKind "defined_class" ;
+    kp:steward "Sales" .
+kp:CalendarDate a owl:Class ;
+    skos:prefLabel "Calendar Date" ;
+    skos:definition "A single calendar day, used as the temporal anchor for transactions and reporting periods." ;
+    kp:conceptKind "entity" ;
+    kp:steward "Finance" .
+kp:CurrencyExchangeRate a owl:Class ;
+    skos:prefLabel "Currency Exchange Rate" ;
+    skos:definition "The daily rate for converting an amount from one currency into a reporting currency." ;
+    kp:conceptKind "entity" ;
+    kp:steward "Finance" .
+kp:Customer a owl:Class ;
+    skos:prefLabel "Customer" ;
+    skos:definition "A natural or legal person who buys products from the company." ;
+    kp:conceptKind "entity" ;
+    kp:steward "Sales" .
+kp:CustomerAge a owl:Class ;
+    skos:prefLabel "Customer Age" ;
+    skos:definition "Age of the customer in years." ;
+    kp:conceptKind "attribute" .
+kp:CustomerCity a owl:Class ;
+    skos:prefLabel "Customer City" ;
+    skos:definition "City of residence of the customer." ;
+    kp:conceptKind "attribute" .
+kp:CustomerCountry a owl:Class ;
+    skos:prefLabel "Customer Country" ;
+    skos:definition "Country of residence of the customer." ;
+    kp:conceptKind "attribute" .
+kp:CustomerGender a owl:Class ;
+    skos:prefLabel "Customer Gender" ;
+    skos:definition "Gender of the customer." ;
+    kp:conceptKind "attribute" .
+kp:CustomerOccupation a owl:Class ;
+    skos:prefLabel "Customer Occupation" ;
+    skos:definition "Stated occupation of the customer." ;
+    kp:conceptKind "attribute" .
+kp:LineCost a owl:Class ;
+    skos:prefLabel "Line Cost" ;
+    skos:definition "Cost of goods sold for one order line: quantity times unit cost." ;
+    kp:conceptKind "measure" .
+kp:LineQuantity a owl:Class ;
+    skos:prefLabel "Line Quantity" ;
+    skos:definition "Number of product units on the order line." ;
+    kp:conceptKind "attribute" .
+kp:LineRevenue a owl:Class ;
+    skos:prefLabel "Line Revenue" ;
+    skos:definition "Gross revenue for one order line: quantity times net price." ;
+    kp:conceptKind "measure" .
+kp:Margin a owl:Class ;
+    skos:prefLabel "Margin" ;
+    skos:definition "Gross margin: total sales minus total cost." ;
+    kp:conceptKind "measure" .
+kp:MarginPercent a owl:Class ;
+    skos:prefLabel "Margin Percent" ;
+    skos:definition "Gross margin expressed as a ratio of total sales." ;
+    kp:conceptKind "measure" .
+kp:Order a owl:Class ;
+    skos:prefLabel "Order" ;
+    skos:definition "A purchase transaction placed by a customer at a store on a given date, composed of one or more order lines." ;
+    kp:conceptKind "entity" ;
+    kp:steward "Sales" .
+kp:OrderCount a owl:Class ;
+    skos:prefLabel "Order Count" ;
+    skos:definition "Number of distinct orders in scope." ;
+    kp:conceptKind "measure" .
+kp:OrderDate a owl:Class ;
+    skos:prefLabel "Order Date" ;
+    skos:definition "The calendar date on which the order was placed." ;
+    kp:conceptKind "attribute" .
+kp:OrderLine a owl:Class ;
+    skos:prefLabel "Order Line" ;
+    skos:definition "A single line on an order, recording one product, its quantity and the prices applied at sale time." ;
+    kp:conceptKind "entity" ;
+    kp:steward "Sales" .
+kp:Product a owl:Class ;
+    skos:prefLabel "Product" ;
+    skos:definition "A sellable item offered to customers, identified by a stable product key." ;
+    kp:conceptKind "entity" ;
+    kp:steward "Merchandising" .
+kp:ProductBrand a owl:Class ;
+    skos:prefLabel "Product Brand" ;
+    skos:definition "Brand under which the product is sold." ;
+    kp:conceptKind "attribute" .
+kp:ProductCategory a owl:Class ;
+    skos:prefLabel "Product Category" ;
+    skos:definition "Top-level merchandising category of the product." ;
+    kp:conceptKind "attribute" .
+kp:ProductUnitCost a owl:Class ;
+    skos:prefLabel "Product Unit Cost" ;
+    skos:definition "Cost to the company of one unit of the product." ;
+    kp:conceptKind "attribute" .
+kp:ProductUnitPrice a owl:Class ;
+    skos:prefLabel "Product Unit Price" ;
+    skos:definition "List selling price of one unit of the product." ;
+    kp:conceptKind "attribute" .
+kp:Store a owl:Class ;
+    skos:prefLabel "Store" ;
+    skos:definition "A physical or online point of sale where orders are placed." ;
+    kp:conceptKind "entity" ;
+    kp:steward "Retail Operations" .
+kp:StoreCountry a owl:Class ;
+    skos:prefLabel "Store Country" ;
+    skos:definition "Country in which the store operates." ;
+    kp:conceptKind "attribute" .
+kp:TotalCost a owl:Class ;
+    skos:prefLabel "Total Cost" ;
+    skos:definition "Sum of line cost across all order lines in scope." ;
+    kp:conceptKind "measure" .
+kp:TotalSales a owl:Class ;
+    skos:prefLabel "Total Sales" ;
+    skos:definition "Sum of line revenue across all order lines in scope." ;
+    kp:conceptKind "measure" .
+
+# --- KNOWLEDGE PLANE: relationships ---
+kp:consistsOf a owl:ObjectProperty ;
+    rdfs:label "consists of" ;
+    rdfs:domain kp:Order ;
+    rdfs:range kp:OrderLine .
+kp:isPlacedAt a owl:ObjectProperty ;
+    rdfs:label "is placed at" ;
+    rdfs:domain kp:Order ;
+    rdfs:range kp:Store .
+kp:isPlacedBy a owl:ObjectProperty ;
+    rdfs:label "is placed by" ;
+    rdfs:domain kp:Order ;
+    rdfs:range kp:Customer .
+kp:occursOn a owl:ObjectProperty ;
+    rdfs:label "occurs on" ;
+    rdfs:domain kp:Order ;
+    rdfs:range kp:CalendarDate .
+kp:recordsSaleOf a owl:ObjectProperty ;
+    rdfs:label "records sale of" ;
+    rdfs:domain kp:OrderLine ;
+    rdfs:range kp:Product .
+
+# --- KNOWLEDGE PLANE: attributes ---
+kp:Customer kp:hasAttribute kp:CustomerAge .
+kp:Customer kp:hasAttribute kp:CustomerGender .
+kp:Customer kp:hasAttribute kp:CustomerOccupation .
+kp:Customer kp:hasAttribute kp:CustomerCountry .
+kp:Customer kp:hasAttribute kp:CustomerCity .
+kp:Store kp:hasAttribute kp:StoreCountry .
+kp:Product kp:hasAttribute kp:ProductBrand .
+kp:Product kp:hasAttribute kp:ProductCategory .
+kp:Product kp:hasAttribute kp:ProductUnitCost .
+kp:Product kp:hasAttribute kp:ProductUnitPrice .
+kp:OrderLine kp:hasAttribute kp:LineQuantity .
+kp:Order kp:hasAttribute kp:OrderDate .
+
+# --- DATA PLANE: per-model object representations ---
+<https://yourorg.example/dp/sales#currency_exchange_rate> a <https://yourorg.example/dp/MalloySource> ; rdfs:label "sales#currency_exchange_rate" .
+<https://yourorg.example/dp/sales#customer> a <https://yourorg.example/dp/MalloySource> ; rdfs:label "sales#customer" .
+<https://yourorg.example/dp/sales#calendar_date> a <https://yourorg.example/dp/MalloySource> ; rdfs:label "sales#calendar_date" .
+<https://yourorg.example/dp/sales#store> a <https://yourorg.example/dp/MalloySource> ; rdfs:label "sales#store" .
+<https://yourorg.example/dp/sales#product> a <https://yourorg.example/dp/MalloySource> ; rdfs:label "sales#product" .
+<https://yourorg.example/dp/sales#order_line> a <https://yourorg.example/dp/MalloySource> ; rdfs:label "sales#order_line" .
+<https://yourorg.example/dp/sales#order> a <https://yourorg.example/dp/MalloySource> ; rdfs:label "sales#order" .
+<https://yourorg.example/dp/sales#customer_order_in_context> a <https://yourorg.example/dp/MalloySource> ; rdfs:label "sales#customer_order_in_context" .
+<https://yourorg.example/dp/sales#order_line_in_context> a <https://yourorg.example/dp/MalloySource> ; rdfs:label "sales#order_line_in_context" .
+<https://yourorg.example/dp/sales#sales_order> a <https://yourorg.example/dp/MalloySource> ; rdfs:label "sales#sales_order" .
+
+# --- SEMANTIC LINKING: isAbout ---
+<https://yourorg.example/dp/sales#currency_exchange_rate> kp:isAbout kp:CurrencyExchangeRate .
+<https://yourorg.example/dp/sales#customer> kp:isAbout kp:Customer .
+<https://yourorg.example/dp/sales#calendar_date> kp:isAbout kp:CalendarDate .
+<https://yourorg.example/dp/sales#store> kp:isAbout kp:Store .
+<https://yourorg.example/dp/sales#product> kp:isAbout kp:Product .
+<https://yourorg.example/dp/sales#order_line> kp:isAbout kp:OrderLine .
+<https://yourorg.example/dp/sales#order> kp:isAbout kp:Order .
+<https://yourorg.example/dp/sales#customer_order_in_context> kp:isAbout kp:Customer .
+<https://yourorg.example/dp/sales#order_line_in_context> kp:isAbout kp:OrderLine .
+<https://yourorg.example/dp/sales#sales_order> kp:isAbout kp:Order .
