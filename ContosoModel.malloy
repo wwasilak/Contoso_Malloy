@@ -1,24 +1,132 @@
+##! experimental.access_modifiers
 
 source: currency_ex is duckdb.table('../Contoso_Malloy/ParquetFiles/currencyexchange.parquet')
+include {
+    public:
+    `Date`
+    Exchange
+    FromCurrency
+    ToCurrency
+}
 
-source: customer is duckdb.table('../Contoso_Malloy/ParquetFiles/customer.parquet') extend {
+source: customer is duckdb.table('../Contoso_Malloy/ParquetFiles/customer.parquet') 
+include {
+    public:
+    Age 
+    Birthday
+    City
+    Company
+    Continent
+    Country
+    CountryFull
+    CustomerKey
+    EndDT
+    Gender
+    GeoAreaKey
+    GivenName
+    Latitude
+    Longitude
+    MiddleInitial
+    Occupation
+    StartDT
+    State
+    StateFull
+    StreetAddress
+    Surname
+    Title
+    Vehicle
+    ZipCode
+}
+
+extend {
     primary_key: CustomerKey
 
 }
     
-source: calendar is duckdb.table('../Contoso_Malloy/ParquetFiles//date.parquet') extend {
+source: calendar is duckdb.table('../Contoso_Malloy/ParquetFiles//date.parquet') 
+include {
+    public:
+    `Date`
+    DateKey
+    DayofWeek
+    DayofWeekNumber
+    DayofWeekShort
+    `Month`
+    MonthNumber
+    MonthShort
+    `Quarter`
+    WorkingDay
+    WorkingDayNumber
+    `Year`
+    YearMonth
+    YearMonthNumber
+    YearMonthShort
+    YearQuarter
+    YearQuarterNumber
+}
+
+extend {
     primary_key: DateKey
 }
 
-source: store is duckdb.table('../Contoso_Malloy/ParquetFiles/store.parquet') extend {
+source: store is duckdb.table('../Contoso_Malloy/ParquetFiles/store.parquet') 
+include {
+    public:
+    CloseDate
+    CountryCode
+    CountryName
+    Description
+    GeoAreaKey
+    OpenDate
+    SquareMeters
+    State
+    Status
+    StoreCode
+    StoreKey
+}
+
+extend {
     primary_key: StoreKey
 }
 
-source: product is duckdb.table('../Contoso_Malloy/ParquetFiles/product.parquet') extend {
+source: product is duckdb.table('../Contoso_Malloy/ParquetFiles/product.parquet') 
+
+include {
+    public:
+    Brand
+    CategoryKey
+    CategoryName
+    Color
+    Cost
+    Manufacturer
+    Price 
+    ProductKey
+    ProductCode
+    ProductName
+    SubCategoryName
+    SubCategoryKey
+    Weight
+    WeightUnit
+}
+
+extend {
     primary_key: ProductKey
 }
 
-source: orderrows is duckdb.table('../Contoso_Malloy/ParquetFiles/orderrows.parquet') extend {
+source: orderrows is duckdb.table('../Contoso_Malloy/ParquetFiles/orderrows.parquet') 
+
+include {
+    public:
+    NetPrice
+    OrderKey
+    ProductKey
+    Quantity
+    RowNumber
+    UnitCost
+    UnitPrice
+}
+
+extend {
     
     join_one: product with ProductKey
 
@@ -27,29 +135,41 @@ source: orderrows is duckdb.table('../Contoso_Malloy/ParquetFiles/orderrows.parq
      _Cost is Quantity * UnitCost  
 }
 
-source: orders is duckdb.table('../Contoso_Malloy/ParquetFiles/orders.parquet') extend {
+source: orders is duckdb.table('../Contoso_Malloy/ParquetFiles/orders.parquet') 
+
+include {
+    public:
+    CurrencyCode
+    CustomerKey
+    DeliveryDate
+    DT
+    OrderKey
+    StoreKey
+}
+
+extend {
     primary_key: OrderKey
 
-    rename: OrderDate is DT
+    -- rename: DT is DT
 
     join_many: orderrows on OrderKey = orderrows.OrderKey
     join_one: customer with CustomerKey
     join_one: store with StoreKey
-    join_one: calendar on OrderDate = calendar.`Date`
-    join_one: currency_ex on CurrencyCode = currency_ex.FromCurrency and OrderDate = currency_ex.`Date`
+    join_one: calendar on DT = calendar.`Date`
+    join_one: currency_ex on CurrencyCode = currency_ex.FromCurrency and DT = currency_ex.`Date`
         and currency_ex.ToCurrency = 'USD'
 
     dimension: 
-        _YearMonth is OrderDate.month
-        _Year is OrderDate.year
-        _Month is month(OrderDate)
+        _YearMonth is DT.month
+        _Year is DT.year
+        _Month is month(DT)
 
     measure:
         Count_Orders is count()
         Total_Cost is orderrows._Cost.sum()
         Total_Sales is orderrows._Revenue.sum()
-        Total_Sales_CY is Total_Sales {where: OrderDate ~ f'this year'}
-        Total_Sales_PY is Total_Sales {where: OrderDate ~ f'last year'}
+        Total_Sales_CY is Total_Sales {where: DT ~ f'this year'}
+        Total_Sales_PY is Total_Sales {where: DT ~ f'last year'}
         Margin is Total_Sales - Total_Cost
         # percent
         Margin_Percent is Margin/Total_Sales
@@ -64,7 +184,7 @@ source: orders is duckdb.table('../Contoso_Malloy/ParquetFiles/orders.parquet') 
 
     view: v_Subcategory is {group_by: Subategory is orderrows.product.SubCategoryName}
 
-    view: v_MaxYear is {aggregate: Max_Year is max(OrderDate.year)}
+    view: v_MaxYear is {aggregate: Max_Year is max(DT.year)}
 
 
     view: v_SalesMetrics is {
@@ -85,14 +205,6 @@ source: orders is duckdb.table('../Contoso_Malloy/ParquetFiles/orders.parquet') 
         }
 
     
--- not possible
-    -- view: py_test is
-    -- {
-    --     aggregate: Total_Sales {where: OrderDate not  in (v_date_py)}
-    -- }
-    -- v_date_py + v_metrics_sales -> {aggregate: Total_Sales_py is Total_Sales.sum()}
-
-    
 }
 
 
@@ -100,7 +212,7 @@ source: sales is duckdb.table('../Contoso_Malloy/ParquetFiles/sales.parquet') ex
 
     join_one: customer with CustomerKey
     join_one: store with StoreKey
-    join_one: calendar on OrderDate = calendar.`Date`
+    join_one: calendar on  OrderDate = calendar.`Date`
 }
 
 
