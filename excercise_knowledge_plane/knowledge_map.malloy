@@ -1,7 +1,7 @@
 --created entirely with Claude
 
 // =============================================================================
-// knowledge_plane.malloy
+// knowledge_map.malloy
 // -----------------------------------------------------------------------------
 // The Knowledge Plane, exposed as a Malloy model so an AI agent can query it
 // through the same Malloy/Publisher MCP it already uses for data — no separate
@@ -22,10 +22,21 @@
 //   then `data_bindings` to find the executable source to query for real data.
 // =============================================================================
 // Requires the DuckDB 'rdf' community extension (provides read_rdf()).
-
-
+//
+// IMPORTANT — how read_rdf() represents URIs:
+//   The extension returns URIs in PREFIXED / CURIE form, e.g. 'kp:Customer',
+//   'owl:ObjectProperty', 'dp:sales#customer' — NOT expanded http://... form.
+//   Two consequences, both handled below:
+//     1. Never exact-match a full expanded URI. Match the predicate/type with
+//        LIKE '%localName' instead. (This is what broke the old relationships
+//        source: WHERE object = 'http://www.w3.org/2002/07/owl#ObjectProperty'
+//        matched nothing, because the extension returns 'owl:ObjectProperty'.)
+//     2. No replace() of an expanded prefix is needed — values already arrive
+//        prefixed. Such replace() calls were dead code and have been removed.
+// =============================================================================
 
 ##! experimental.access_modifiers
+
 // ---------------------------------------------------------------------------
 // CONCEPTS — the business vocabulary.
 // One row per concept. `concept_kind` is the most important column: it tells
@@ -38,13 +49,13 @@ source: concepts is duckdb.sql("""
   WITH t AS (SELECT subject, predicate, object
              FROM read_rdf('excercise_knowledge_plane/knowledge_map.ttl'))
   SELECT
-    replace(s.subject, 'https://yourorg.example/kp#', 'kp:')      AS concept_uri,
-    kind.object                                                  AS concept_kind,
-    lbl.object                                                   AS label,
-    def.object                                                   AS definition,
-    stw.object                                                   AS steward,
-    replace(sup.object, 'https://yourorg.example/kp#', 'kp:')     AS subtype_of,
-    mem.object                                                   AS membership_rule
+    s.subject     AS concept_uri,
+    kind.object   AS concept_kind,
+    lbl.object    AS label,
+    def.object    AS definition,
+    stw.object    AS steward,
+    sup.object    AS subtype_of,
+    mem.object    AS membership_rule
   FROM (SELECT DISTINCT subject FROM t WHERE predicate LIKE '%conceptKind') s
   LEFT JOIN t kind ON kind.subject = s.subject AND kind.predicate LIKE '%conceptKind'
   LEFT JOIN t lbl  ON lbl.subject  = s.subject AND lbl.predicate  LIKE '%prefLabel'
@@ -52,33 +63,26 @@ source: concepts is duckdb.sql("""
   LEFT JOIN t stw  ON stw.subject  = s.subject AND stw.predicate  LIKE '%steward'
   LEFT JOIN t sup  ON sup.subject  = s.subject AND sup.predicate  LIKE '%subClassOf'
   LEFT JOIN t mem  ON mem.subject  = s.subject AND mem.predicate  LIKE '%membershipRule'
-""") 
-
+""")
 include {
   public:
   # description = "Stable URI of the concept; used as the join key everywhere."
   concept_uri
-
   # description = "Human-readable name of the concept."
   label
-
   # description = "Plain-language business definition. The agent should treat this as authoritative."
   definition
-
   # description = "Business owner accountable for this concept's meaning. Null for attributes/measures."
   steward
-
   # description = "For defined_class concepts: the parent entity it is a subset of."
   subtype_of
-
   # description = "For defined_class concepts: the necessary-and-sufficient rule for membership."
   membership_rule
-
-  # description = "Classifies each concept as one of four types"
+  # description = "Classifies each concept as one of four types: entity, attribute, measure, defined_class."
   concept_kind
 }
 extend {
- measure:
+  measure:
   # description = "How many concepts of each kind exist."
   concept_count is count()
 
@@ -99,26 +103,29 @@ extend {
   }
 }
 
-
 // ---------------------------------------------------------------------------
 // RELATIONSHIPS — how entities connect.
 // One row per relationship. Read as a sentence: <domain> <label> <range>,
 // e.g. "Order is placed by Customer".
+//
+// FIX: identify relationships by the STRUCTURE (has a domain + a range),
+// not by exact-matching the rdf:type object. The extension returns the type
+// object prefixed ('owl:ObjectProperty'), so the old exact-match returned
+// nothing. Keying off rdfs:domain / rdfs:range via LIKE is robust.
 // ---------------------------------------------------------------------------
 source: relationships is duckdb.sql("""
   WITH t AS (SELECT subject, predicate, object
              FROM read_rdf('excercise_knowledge_plane/knowledge_map.ttl'))
   SELECT
-    replace(s.subject, 'https://yourorg.example/kp#', 'kp:')   AS relationship_uri,
-    lbl.object                                                 AS verb,
-    replace(dom.object, 'https://yourorg.example/kp#', 'kp:')  AS domain_concept,
-    replace(rng.object, 'https://yourorg.example/kp#', 'kp:')  AS range_concept
-  FROM (SELECT DISTINCT subject FROM t
-        WHERE object = 'http://www.w3.org/2002/07/owl#ObjectProperty') s
-  LEFT JOIN t lbl ON lbl.subject = s.subject AND lbl.predicate LIKE '%label'
-  LEFT JOIN t dom ON dom.subject = s.subject AND dom.predicate LIKE '%domain'
-  LEFT JOIN t rng ON rng.subject = s.subject AND rng.predicate LIKE '%range'
-""") 
+    dom.subject  AS relationship_uri,
+    lbl.object   AS verb,
+    dom.object   AS domain_concept,
+    rng.object   AS range_concept
+  FROM t dom
+  JOIN t rng      ON rng.subject = dom.subject AND rng.predicate LIKE '%range'
+  LEFT JOIN t lbl ON lbl.subject = dom.subject AND lbl.predicate LIKE '%label'
+  WHERE dom.predicate LIKE '%domain'
+""")
 include {
   public:
   # description = "Stable URI of the relationship."
@@ -152,10 +159,10 @@ source: concept_attributes is duckdb.sql("""
   WITH t AS (SELECT subject, predicate, object
              FROM read_rdf('excercise_knowledge_plane/knowledge_map.ttl'))
   SELECT
-    replace(subject, 'https://yourorg.example/kp#', 'kp:') AS entity_concept,
-    replace(object,  'https://yourorg.example/kp#', 'kp:') AS attribute_concept
+    subject AS entity_concept,
+    object  AS attribute_concept
   FROM t WHERE predicate LIKE '%hasAttribute'
-""") 
+""")
 include {
   public:
   # description = "The entity that owns the attribute."
@@ -180,16 +187,19 @@ extend {
 // WHERE to actually run a query: given a concept, which executable Malloy
 // source in which model represents it. Note one concept can have several
 // bindings (e.g. kp:Customer is realised by more than one source).
+//
+// The subject arrives prefixed as 'dp:sales#customer'. We strip the leading
+// 'dp:' then split on '#' into model ('sales') and source ('customer').
 // ---------------------------------------------------------------------------
 source: data_bindings is duckdb.sql("""
   WITH t AS (SELECT subject, predicate, object
              FROM read_rdf('excercise_knowledge_plane/knowledge_map.ttl'))
   SELECT
-    replace(object, 'https://yourorg.example/kp#', 'kp:')   AS concept_uri,
-    split_part(replace(subject, 'https://yourorg.example/dp/', ''), '#', 1) AS model,
-    split_part(replace(subject, 'https://yourorg.example/dp/', ''), '#', 2) AS malloy_source
+    object                                                   AS concept_uri,
+    split_part(replace(subject, 'dp:', ''), '#', 1)          AS model,
+    split_part(replace(subject, 'dp:', ''), '#', 2)          AS malloy_source
   FROM t WHERE predicate LIKE '%isAbout'
-""") 
+""")
 include {
   public:
   # description = "The concept this Malloy source is about."
