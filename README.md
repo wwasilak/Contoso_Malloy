@@ -1,5 +1,7 @@
 
-Mini project  : trying to apply Knowledge Plane concepts using Malloy. The concepts come from Juha Korpela substack articles:
+## Mini project  : 
+
+Trying to apply Knowledge Plane concepts using Malloy. The concepts come from Juha Korpela substack articles:
 
 - https://commonsensedata.substack.com/p/the-quest-for-semantic-architecture
 - https://commonsensedata.substack.com/p/semantic-linking-the-aboutness-of
@@ -16,9 +18,8 @@ Some comments:
 - in real life it would be a Malloy Publisher feature probably
 - in the current iteration Malloy models were created from a single base model to check if agent can quicker decide which model to query
 
---=====================--
 
-current iteration:
+## Current iteration:
 
 - knowledge_plane.motly - the canonical Knowledge Plane: concepts, definitions and relationships, manual maintenance.
 - Malloy models - the Data Plane, as several Malloy models that all link to the same Knowledge Plane concepts:
@@ -27,6 +28,17 @@ current iteration:
 - exporter.js - reads the KP and compiles every model in models/ (loading by URL so `import` resolves), validates that every linked concept exists in the KP and that each preferred_source resolves to a real (model, source), then generates the output. Concepts are attributed to the model whose file actually defines the annotated source/field, so the "Shared concepts (>1 model)" report stays meaningful. Run it with `npm run build`.
 - knowledge_map.json - the generated output: a meaning + routing map for an AI agent (concepts, definitions, stewards, which models touch each concept, and relationships). It deliberately carries NO field inventory - fields live in the Malloy models, which are the source of truth (compile the named source to see them).
 
+
+## Initial version: 
+Dropped as agent was loosing a lot of time on using knowledge_map.malloy file. 
+
+- knowledge_plane.motly - the canonical Knowledge Plane: concepts, definitions and relationships, manual maintenance
+- sales.malloy - a Malloy model following Korpela's naming conventions; sources and fields are linked to concepts via # concept annotations.
+- exporter.js - reads the KP and the model, validates that every linked concept exists, and generates the outputs.
+- knowledge_map.ttl / knowledge_map.md - generated outputs: an RDF graph and a glossary (for AI agent). Markdown file for simple project. TTL file for more complex ones.
+- knowledge_map.malloy - Malloy model which allows AI agent to query ttl file (or parquets derived from ttl file) and understand how the Knowledge Plane links to the Data Plane.
+
+
 ## Getting started
 
 Run from the repo root:
@@ -34,16 +46,6 @@ npm install
 npm run build
 
 Regenerates `knowledge_map.json` from `knowledge_plane.motly` and `models/*.malloy`. All commands assume the repo root as the working directory — DuckDB resolves table paths (`ParquetFiles/...`) relative to it.
-
---=====================--
-
-initial version: Dropped as agent was loosing a lot of time on using knowledge_map.malloy file. 
-
-- knowledge_plane.motly - the canonical Knowledge Plane: concepts, definitions and relationships, manual maintenance
-- sales.malloy - a Malloy model following Korpela's naming conventions; sources and fields are linked to concepts via # concept annotations.
-- exporter.js - reads the KP and the model, validates that every linked concept exists, and generates the outputs.
-- knowledge_map.ttl / knowledge_map.md - generated outputs: an RDF graph and a glossary (for AI agent). Markdown file for simple project. TTL file for more complex ones.
-- knowledge_map.malloy - Malloy model which allows AI agent to query ttl file (or parquets derived from ttl file) and understand how the Knowledge Plane links to the Data Plane.
 
 
 
