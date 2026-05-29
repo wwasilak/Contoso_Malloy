@@ -1,0 +1,13 @@
+{
+  "scripts": {
+    "build": "cross-env MODELS_DIR=models node exporter.js"
+  },
+  "devDependencies": {
+    "cross-env": "^7.0.3"
+  },
+  "dependencies": {
+    "@malloydata/db-duckdb": "^0.0.403",
+    "@malloydata/malloy": "^0.0.403",
+    "@malloydata/motly-ts-parser": "^0.8.1"
+  }
+}
