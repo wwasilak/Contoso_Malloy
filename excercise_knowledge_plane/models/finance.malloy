@@ -1,0 +1,45 @@
+##! experimental.access_modifiers experimental.parameters
+
+// =============================================================================
+// FINANCE MODEL — revenue, margin and FX/currency reporting. Imports the base.
+// Links only; concept definitions live in the Knowledge Plane (MOTLY).
+// =============================================================================
+import "base.malloy"
+
+// ---------- FINANCE_ORDER — currency & margin reporting on the order fact -----
+# model = "finance"
+# concept = "kp:Order"
+source: finance_order(reporting_currency::string is "USD") is
+  sales_order(reporting_currency is reporting_currency) extend {
+
+  dimension:
+  # concept = "kp:OrderCurrency"
+  order_currency is CurrencyCode
+
+  measure:
+  // --- P&L in finance vocabulary (reuses the base measures, shared concepts) --
+  # concept = "kp:TotalSales"
+  net_revenue is total_sales
+  # concept = "kp:TotalCost"
+  cost_of_goods_sold is total_cost
+  # concept = "kp:Margin"
+  gross_profit is margin
+  # concept = "kp:MarginPercent"
+  gross_margin_percent is margin_percent
+
+  // --- discount / markdown analysis (list price vs net price) ----------------
+  # concept = "kp:GrossRevenue"
+  gross_revenue is lines.line_list_revenue.sum()
+  # concept = "kp:DiscountAmount"
+  discount_amount is lines.line_discount.sum()
+  # concept = "kp:DiscountRate"
+  discount_rate is discount_amount / gross_revenue
+
+  // --- pricing & FX ----------------------------------------------------------
+  # concept = "kp:AverageSellingPrice"
+  average_selling_price is total_sales / lines.Quantity.sum()
+  # concept = "kp:MarkupPercent"
+  markup_percent is margin / total_cost
+  # concept = "kp:AverageExchangeRate"
+  average_exchange_rate is lines.converted_via.Exchange.avg()
+}

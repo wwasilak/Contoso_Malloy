@@ -1,9 +1,12 @@
-##! experimental.access_modifiers
+##! experimental.access_modifiers experimental.parameters
 
 // =============================================================================
-// SALES MODEL — multi-model variant. Links only; definitions live in the KP.
+// BASE MODEL — shared data plane + core semantics for ALL departments.
+// Department models (sales, operations, finance, merchandising) `import` this
+// file and EXTEND its sources; they never redefine the plumbing.
+// Links only; concept definitions live in the Knowledge Plane (MOTLY).
 // =============================================================================
-# model = "sales"
+# model = "base"
 
 // ---------- CURRENCY EXCHANGE RATE ----------
 # concept = "kp:CurrencyExchangeRate"
@@ -33,7 +36,7 @@ source: customer is duckdb.table('../Contoso_Malloy/ParquetFiles/customer.parque
     Birthday, Company, Continent, CountryFull, EndDT, GivenName, Latitude,
     Longitude, MiddleInitial, StartDT, State, StateFull, StreetAddress,
     Surname, Title, Vehicle, ZipCode
-  } 
+  }
   extend {
     primary_key: CustomerKey
   }
@@ -47,7 +50,7 @@ source: calendar_date is duckdb.table('../Contoso_Malloy/ParquetFiles/date.parqu
     `Date`, DayofWeek, DayofWeekNumber, DayofWeekShort, `Month`, MonthNumber,
     MonthShort, `Quarter`, WorkingDay, WorkingDayNumber, `Year`, YearMonth,
     YearMonthNumber, YearMonthShort, YearQuarter, YearQuarterNumber
-  } 
+  }
   extend {
     primary_key: DateKey
   }
@@ -63,7 +66,7 @@ source: store is duckdb.table('../Contoso_Malloy/ParquetFiles/store.parquet')
 
     CloseDate, CountryCode, Description, OpenDate, SquareMeters, State,
     Status, StoreCode
-  } 
+  }
   extend {
     primary_key: StoreKey
   }
@@ -85,7 +88,7 @@ source: product is duckdb.table('../Contoso_Malloy/ParquetFiles/product.parquet'
 
     Color, Manufacturer, ProductCode, ProductName, SubCategoryName,
     Weight, WeightUnit
-  } 
+  }
   extend {
     primary_key: ProductKey
   }
@@ -106,20 +109,20 @@ source: order_line is duckdb.table('../Contoso_Malloy/ParquetFiles/orderrows.par
 # concept = "kp:Order"
 source: order is duckdb.table('../Contoso_Malloy/ParquetFiles/orders.parquet')
   include {
-    internal: OrderKey, StoreKey, CurrencyCode
+    internal: OrderKey, StoreKey
     public:
     # concept = "kp:OrderDate"
     DT
 
-    DeliveryDate, CustomerKey
-  } 
+    DeliveryDate, CustomerKey, CurrencyCode
+  }
   extend {
     primary_key: OrderKey
   }
 
 
 // =============================================================================
-// EXTENDED LAYER — named relationships + measures
+// EXTENDED LAYER — named relationships + core measures
 // =============================================================================
 
 
@@ -135,24 +138,35 @@ source: customer_order_in_context is customer extend {
 
 
 // ---------- ORDER_LINE_IN_CONTEXT ----------
-
 # concept = "kp:OrderLine"
-source: order_line_in_context is order_line extend {
+source: order_line_in_context(reporting_currency::string is "USD") is order_line extend {
 
   # is_about_role = "kp:recordsSaleOf"
   join_one: sold_product is product with ProductKey
 
+  join_one: of_order is order on OrderKey = of_order.OrderKey
+
+  # is_about_role = "kp:isConvertedVia"
+  join_one: converted_via is currency_exchange_rate on
+        of_order.CurrencyCode = converted_via.FromCurrency
+    and of_order.DT           = converted_via.`Date`
+    and converted_via.ToCurrency = reporting_currency
+
   dimension:
   # concept = "kp:LineRevenue"
-  line_revenue is (Quantity * NetPrice)
+  line_revenue is (Quantity * NetPrice) * converted_via.Exchange
   # concept = "kp:LineCost"
-  line_cost is (Quantity * UnitCost)
+  line_cost   is (Quantity * UnitCost) * converted_via.Exchange
+  # concept = "kp:LineListRevenue"
+  line_list_revenue is (Quantity * UnitPrice) * converted_via.Exchange
+  # concept = "kp:LineDiscount"
+  line_discount is ((UnitPrice - NetPrice) * Quantity) * converted_via.Exchange
 }
 
 
-// ---------- SALES_ORDER ----------
+// ---------- SALES_ORDER — core order fact every department builds on ----------
 # concept = "kp:Order"
-source: sales_order is order extend {
+source: sales_order(reporting_currency::string is "USD") is order extend {
 
   # is_about_role = "kp:isPlacedBy"
   join_one: placed_by is customer with CustomerKey
@@ -161,7 +175,12 @@ source: sales_order is order extend {
   # is_about_role = "kp:occursOn"
   join_one: occurs_on is calendar_date on DT = occurs_on.`Date`
   # is_about_role = "kp:consistsOf"
-  join_many: lines is order_line_in_context on OrderKey = lines.OrderKey
+  join_many: lines is order_line_in_context(reporting_currency is reporting_currency)
+    on OrderKey = lines.OrderKey
+
+  dimension:
+  # concept = "kp:SalesChannel"
+  channel is pick 'Online' when placed_at.CountryName = 'Online' else 'Physical store'
 
   measure:
   # concept = "kp:OrderCount"
