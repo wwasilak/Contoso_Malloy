@@ -1,0 +1,13 @@
+{
+  "connections": {
+    "duckdb": {
+      "is": "duckdb",
+      "databasePath": ":memory:",
+      "workingDirectory": "/workspace",
+
+      "allowCommunityExtensions": true,
+      "autoinstallKnownExtensions": true,
+      "autoloadKnownExtensions": true
+    }
+  }
+}
