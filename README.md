@@ -16,11 +16,12 @@ Some comments:
 - done mostly by talking with Claude
 - uses MOTLY language for knowledge_plane - it is used in Malloy models for annotations so we have single language in both places
 - in real life it would be a Malloy Publisher feature probably
-- in the current iteration Malloy models were created from a single base model to check if agent can quicker decide which model to query
+- in the current iteration Malloy models were created from a single base model to check if agent can quickly decide which model to query
 
 
 ## Current iteration:
 
+Assets:
 - knowledge_plane.motly - the canonical Knowledge Plane: concepts, definitions and relationships, manual maintenance.
 - Malloy models - the Data Plane, as several Malloy models that all link to the same Knowledge Plane concepts:
   - models/base.malloy - the shared foundation (`# model = "base"`). Defines the data-plane sources (customer, product, store, order, order line, calendar date, currency), the in-context sources (order_line_in_context, customer_order_in_context) and the core order fact `sales_order` with the universal measures. All plumbing lives here, once.
@@ -32,6 +33,7 @@ Some comments:
 ## Initial version: 
 Dropped as agent was loosing a lot of time on using knowledge_map.malloy file. 
 
+Assets:
 - knowledge_plane.motly - the canonical Knowledge Plane: concepts, definitions and relationships, manual maintenance
 - sales.malloy - a Malloy model following Korpela's naming conventions; sources and fields are linked to concepts via # concept annotations.
 - exporter.js - reads the KP and the model, validates that every linked concept exists, and generates the outputs.
